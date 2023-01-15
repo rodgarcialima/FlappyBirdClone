@@ -29,8 +29,7 @@ public class GameManager : MonoBehaviour
         await UnityServices.InitializeAsync();
 
         // authentication        
-        SetupAuthenticationEvents();
-        SignInAnonymouslyAsync();
+        await SignInAnonymouslyAsync();
 
         // force app to 60 fps max
         Application.targetFrameRate = 60;
@@ -39,23 +38,15 @@ public class GameManager : MonoBehaviour
         Pause();
     }
 
-    async void Start()
-    {
-        await ShowLeaderboard();
-    }
-
-    private void SetupAuthenticationEvents()
-    {
-        AuthenticationService.Instance.SignedIn += SignedIn;
-        AuthenticationService.Instance.SignInFailed += SignInFailed;
-        AuthenticationService.Instance.SignedOut += SignedOut;
-        AuthenticationService.Instance.Expired += Expired;
-    }
-
-    private async void SignInAnonymouslyAsync()
+    private async Task SignInAnonymouslyAsync()
     {
         try
         {
+            AuthenticationService.Instance.SignedIn += SignedIn;
+            AuthenticationService.Instance.SignInFailed += SignInFailed;
+            AuthenticationService.Instance.SignedOut += SignedOut;
+            AuthenticationService.Instance.Expired += Expired;
+            
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
             Debug.Log("Sign in anonymously succeeded!");
 
@@ -64,6 +55,9 @@ public class GameManager : MonoBehaviour
 
             playerID.text = AuthenticationService.Instance.PlayerId;
 
+            Debug.Log($"SignInAnonymouslyAsync: IS AUTHORIZED = {AuthenticationService.Instance.IsAuthorized}");
+            Debug.Log($"SignInAnonymouslyAsync: IS EXPIRED = {AuthenticationService.Instance.IsExpired}");
+            Debug.Log($"SignInAnonymouslyAsync: IS SIGNEDIN = {AuthenticationService.Instance.IsSignedIn}");
         }
         catch (AuthenticationException ex)
         {
@@ -134,18 +128,18 @@ public class GameManager : MonoBehaviour
         scoreText.text = score.ToString();
     }
 
-    public async void GameOver()
+    public async Task GameOverAsync()
     {
         gameOver.SetActive(true);
         playButton.SetActive(true);
 
         Pause();
 
-        await UpdateLeaderboard();
-        await ShowLeaderboard();
+        await UpdateLeaderboardAsync();
+        await ShowLeaderboardASync();
     }
 
-    private async Task UpdateLeaderboard()
+    private async Task UpdateLeaderboardAsync()
     {
         try
         {
@@ -158,7 +152,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private async Task ShowLeaderboard()
+    private async Task ShowLeaderboardASync()
     {
         try
         {
@@ -192,6 +186,9 @@ public class GameManager : MonoBehaviour
         } 
         catch (Exception ex)
         {
+            Debug.Log($"IS AUTHORIZED = {AuthenticationService.Instance.IsAuthorized}");
+            Debug.Log($"IS EXPIRED = {AuthenticationService.Instance.IsExpired}");
+            Debug.Log($"IS SIGNEDIN = {AuthenticationService.Instance.IsSignedIn}");
             HideLeaderboard();
             Debug.LogError(ex);
         }
